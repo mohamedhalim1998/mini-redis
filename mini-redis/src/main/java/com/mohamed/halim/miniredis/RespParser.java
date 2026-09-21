@@ -1,5 +1,7 @@
 package com.mohamed.halim.miniredis;
 
+import com.mohamed.halim.miniredis.resp.RespValue;
+
 import java.io.InputStream;
 import java.util.List;
 
