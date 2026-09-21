@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Redis Deep Dive</title>
+    <style>
+        :root {
+            --bg: #1a1b26;
+            --bg-surface: #24283b;
+            --bg-hover: #2f3549;
+            --text: #c0caf5;
+            --text-muted: #565f89;
+            --text-bright: #e0e6ff;
+            --accent: #7aa2f7;
+            --accent-dim: #3d59a1;
+            --border: #3b4261;
+            --code-bg: #1f2335;
+            --success: #9ece6a;
+            --warning: #e0af68;
+            --error: #f7768e;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.7;
+            font-size: 16px;
+        }
+
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Table of Contents */
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 280px;
+            height: 100vh;
+            overflow-y: auto;
+            background: var(--bg-surface);
+            border-right: 1px solid var(--border);
+            padding: 1.5rem 1rem;
+            z-index: 100;
+        }
+
+        nav h2 {
+            color: var(--accent);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        nav ul {
+            list-style: none;
+        }
+
+        nav ul li {
+            margin-bottom: 0.25rem;
+        }
+
+        nav ul li a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.875rem;
+            display: block;
+            padding: 0.3rem 0.5rem;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+
+        nav ul li a:hover {
+            color: var(--text-bright);
+            background: var(--bg-hover);
+        }
+
+        nav ul li.section > a {
+            color: var(--text);
+            font-weight: 600;
+            margin-top: 0.75rem;
+        }
+
+        nav ul li.sub {
+            padding-left: 1rem;
+        }
+
+        /* Main Content */
+        main {
+            margin-left: 280px;
+            padding: 3rem 4rem;
+            max-width: 900px;
+            width: 100%;
+        }
+
+        h1 {
+            color: var(--text-bright);
+            font-size: 2.25rem;
+            margin-bottom: 0.5rem;
+            border-bottom: 2px solid var(--accent);
+            padding-bottom: 0.75rem;
+        }
+
+        h1 + p {
+            color: var(--text-muted);
+            margin-bottom: 2rem;
+        }
+
+        h2 {
+            color: var(--accent);
+            font-size: 1.5rem;
+            margin-top: 3rem;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        h3 {
+            color: var(--text-bright);
+            font-size: 1.2rem;
+            margin-top: 2rem;
+            margin-bottom: 0.75rem;
+        }
+
+        p {
+            margin-bottom: 1rem;
+        }
+
+        a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        /* Collapsible Sections */
+        details {
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            overflow: hidden;
+        }
+
+        summary {
+            padding: 1rem 1.25rem;
+            cursor: pointer;
+            font-weight: 600;
+            color: var(--text-bright);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            user-select: none;
+            transition: background 0.2s;
+        }
+
+        summary:hover {
+            background: var(--bg-hover);
+        }
+
+        summary::before {
+            content: '▶';
+            font-size: 0.7rem;
+            transition: transform 0.2s;
+            color: var(--accent);
+        }
+
+        details[open] summary::before {
+            transform: rotate(90deg);
+        }
+
+        details .content {
+            padding: 0 1.25rem 1.25rem;
+            border-top: 1px solid var(--border);
+        }
+
+        /* Code Blocks */
+        pre {
+            background: var(--code-bg);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 1rem 1.25rem;
+            overflow-x: auto;
+            margin: 1rem 0;
+            font-size: 0.875rem;
+            line-height: 1.5;
+        }
+
+        code {
+            font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', Consolas, monospace;
+            font-size: 0.875em;
+        }
+
+        :not(pre) > code {
+            background: var(--code-bg);
+            border: 1px solid var(--border);
+            padding: 0.15rem 0.4rem;
+            border-radius: 3px;
+            color: var(--warning);
+        }
+
+        /* Tables */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+            font-size: 0.9rem;
+        }
+
+        th, td {
+            padding: 0.6rem 1rem;
+            text-align: left;
+            border: 1px solid var(--border);
+        }
+
+        th {
+            background: var(--bg-surface);
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        tr:nth-child(even) {
+            background: var(--bg-surface);
+        }
+
+        /* Lists */
+        ul, ol {
+            margin: 0.75rem 0;
+            padding-left: 1.5rem;
+        }
+
+        li {
+            margin-bottom: 0.4rem;
+        }
+
+        /* Mermaid */
+        .mermaid {
+            background: var(--bg-surface);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            text-align: center;
+            overflow-x: auto;
+        }
+
+        /* Strong */
+        strong {
+            color: var(--text-bright);
+        }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            nav {
+                display: none;
+            }
+            main {
+                margin-left: 0;
+                padding: 2rem 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <nav>
+            <h2>Table of Contents</h2>
+            <ul>
+                <li class="section"><a href="#architecture">Architecture</a></li>
+                <li class="section"><a href="#internals">Key Internals</a></li>
+                <li class="sub"><a href="#event-loop">The Event Loop</a></li>
+                <li class="sub"><a href="#resp-protocol">RESP Protocol</a></li>
+                <li class="sub"><a href="#key-space">The Key Space</a></li>
+                <li class="sub"><a href="#data-structures">Data Structure Encodings</a></li>
+                <li class="sub"><a href="#expiration">Expiration & Eviction</a></li>
+                <li class="sub"><a href="#rdb">Persistence: RDB</a></li>
+                <li class="sub"><a href="#aof">Persistence: AOF</a></li>
+                <li class="sub"><a href="#pubsub">Pub/Sub</a></li>
+                <li class="sub"><a href="#pipelining">Pipelining</a></li>
+                <li class="section"><a href="#resources">Resources</a></li>
+            </ul>
+        </nav>
+
+        <main>
+            <h1>Redis Deep Dive</h1>
+            <p>Interactive reference for Redis internals — use when you're stuck implementing.</p>
+
+            <h2 id="architecture">Architecture</h2>
+            <p>Redis follows a simple but powerful architecture: a single-threaded event loop that multiplexes thousands of client connections, executing commands against in-memory data structures with optional disk persistence.</p>
+
+            <div class="mermaid">
+graph TB
+    subgraph Clients
+        C1[Client 1]
+        C2[Client 2]
+        CN[Client N]
+    end
+
+    subgraph "Redis Server - Single Process"
+        subgraph "Event Loop - Main Thread"
+            IO[I/O Multiplexer<br/>epoll / kqueue]
+            CP[Command Parser<br/>RESP Decoder]
+            CE[Command Executor]
+            RW[Response Writer<br/>RESP Encoder]
+        end
+
+        subgraph "Data Structures"
+            KS[Key Space<br/>Hash Table]
+            ST[Strings]
+            LI[Lists]
+            SE[Sets]
+            SS[Sorted Sets]
+            HA[Hashes]
+        end
+
+        subgraph "Persistence"
+            RDB[RDB<br/>Fork + Serialize]
+            AOF[AOF<br/>Append Write Log]
+        end
+    end
+
+    C1 & C2 & CN -->|TCP :6379| IO
+    IO --> CP --> CE --> RW
+    CE --> KS
+    KS --> ST & LI & SE & SS & HA
+    CE -->|background| RDB & AOF
+            </div>
+
+            <h2 id="internals">Key Internals</h2>
+
+            <details open id="event-loop">
+                <summary>The Event Loop</summary>
+                <div class="content">
+                    <p>Redis uses a custom event loop (<code>ae</code> library in the source code) built on top of the OS's I/O multiplexing primitives — <code>epoll</code> on Linux, <code>kqueue</code> on BSD/macOS, or <code>select</code> as a portable fallback.</p>
+                    <p>The loop performs these steps continuously:</p>
+                    <ol>
+                        <li>Calls the multiplexer to get a list of sockets with pending I/O</li>
+                        <li>Reads complete commands from client input buffers</li>
+                        <li>Executes each command (single-threaded, no interleaving)</li>
+                        <li>Writes responses to client output buffers</li>
+                        <li>Handles time events (expiration, persistence triggers)</li>
+                    </ol>
+                    <p>This design means Redis can handle tens of thousands of concurrent connections with a single thread because it never blocks waiting on a single client. The bottleneck is CPU time spent executing commands, not I/O wait.</p>
+                    <p>Recent versions (6.0+) introduced optional I/O threads that can parallelize network read/write operations, but <strong>command execution remains strictly single-threaded</strong>.</p>
+                </div>
+            </details>
+
+            <details id="resp-protocol">
+                <summary>RESP Protocol</summary>
+                <div class="content">
+                    <p>RESP (Redis Serialization Protocol) is the wire format for client-server communication. It's text-based, human-readable, and fast to parse because it uses prefix lengths rather than delimiters for binary data.</p>
+
+                    <h3>RESP2 Data Types</h3>
+                    <table>
+                        <thead>
+                            <tr><th>Type</th><th>First Byte</th><th>Example</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>Simple String</td><td><code>+</code></td><td><code>+OK\r\n</code></td></tr>
+                            <tr><td>Error</td><td><code>-</code></td><td><code>-ERR unknown command\r\n</code></td></tr>
+                            <tr><td>Integer</td><td><code>:</code></td><td><code>:1000\r\n</code></td></tr>
+                            <tr><td>Bulk String</td><td><code>$</code></td><td><code>$5\r\nhello\r\n</code></td></tr>
+                            <tr><td>Array</td><td><code>*</code></td><td><code>*2\r\n$3\r\nGET\r\n$3\r\nkey\r\n</code></td></tr>
+                            <tr><td>Null</td><td><code>$-1</code></td><td><code>$-1\r\n</code></td></tr>
+                        </tbody>
+                    </table>
+
+                    <h3>Example: SET command</h3>
+                    <pre><code>*3\r\n$3\r\nSET\r\n$5\r\nmykey\r\n$7\r\nmyvalue\r\n</code></pre>
+                    <p>This encodes <code>SET mykey myvalue</code> — an array of 3 bulk strings.</p>
+
+                    <h3>Parsing Strategy</h3>
+                    <p>Read the first byte to determine the type. For bulk strings, read the length prefix, then read exactly that many bytes plus the trailing <code>\r\n</code>. For arrays, read the element count, then recursively read that many RESP values.</p>
+                </div>
+            </details>
+
+            <details id="key-space">
+                <summary>The Key Space</summary>
+                <div class="content">
+                    <p>Redis organizes all data in a flat key space — a hash table mapping string keys to value objects. Each value object (<code>robj</code> in the source) carries:</p>
+                    <ul>
+                        <li>The object's <strong>type</strong> (string, list, set, etc.)</li>
+                        <li>The <strong>encoding</strong> (the internal representation: raw, int, ziplist, skiplist, etc.)</li>
+                        <li>A <strong>reference count</strong> for memory management</li>
+                        <li>An <strong>LRU/LFU timestamp</strong> for eviction</li>
+                    </ul>
+                    <p>Redis uses two hash tables internally for <strong>incremental rehashing</strong> — when the table grows, entries are migrated gradually across event loop iterations to avoid latency spikes.</p>
+                </div>
+            </details>
+
+            <details id="data-structures">
+                <summary>Data Structure Encodings</summary>
+                <div class="content">
+                    <p>Redis optimizes memory by choosing compact encodings for small collections:</p>
+                    <table>
+                        <thead>
+                            <tr><th>Type</th><th>Small Encoding</th><th>Large Encoding</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>String</td><td>Integer (if numeric)</td><td>SDS (Simple Dynamic String)</td></tr>
+                            <tr><td>List</td><td>Listpack (≤128 entries)</td><td>Quicklist (linked list of listpacks)</td></tr>
+                            <tr><td>Set</td><td>Intset (all integers, ≤512)</td><td>Hash table</td></tr>
+                            <tr><td>Sorted Set</td><td>Listpack (≤128 entries)</td><td>Skiplist + hash table</td></tr>
+                            <tr><td>Hash</td><td>Listpack (≤128 entries)</td><td>Hash table</td></tr>
+                        </tbody>
+                    </table>
+                    <p>The system transparently upgrades from compact to full encoding when thresholds are exceeded.</p>
+                </div>
+            </details>
+
+            <details id="expiration">
+                <summary>Expiration & Eviction</summary>
+                <div class="content">
+                    <h3>TTL Tracking</h3>
+                    <p>Keys with expiration are stored in a separate dictionary mapping key → expiration timestamp (milliseconds since epoch).</p>
+
+                    <h3>Lazy Expiration</h3>
+                    <p>Every time a key is accessed, Redis checks if it's expired. If so, it's deleted before the command executes. This is simple but means expired keys can linger in memory until accessed.</p>
+
+                    <h3>Active Expiration</h3>
+                    <p>A periodic task (runs 10 times/second by default) samples 20 random keys from the expires dictionary. If more than 25% of sampled keys are expired, it repeats immediately. This probabilistic approach bounds both memory waste and CPU usage.</p>
+
+                    <h3>Eviction Policies</h3>
+                    <p>When <code>maxmemory</code> is reached:</p>
+                    <ul>
+                        <li><code>noeviction</code> — Return errors for writes</li>
+                        <li><code>allkeys-lru</code> — LRU eviction across all keys</li>
+                        <li><code>volatile-lru</code> — LRU eviction only among keys with TTL</li>
+                        <li><code>allkeys-lfu</code> — Least Frequently Used across all keys</li>
+                        <li><code>allkeys-random</code> — Random eviction</li>
+                        <li><code>volatile-ttl</code> — Evict keys closest to expiration</li>
+                    </ul>
+                </div>
+            </details>
+
+            <details id="rdb">
+                <summary>Persistence: RDB Snapshots</summary>
+                <div class="content">
+                    <p>RDB creates a point-in-time binary dump of the entire dataset:</p>
+                    <ol>
+                        <li>Redis forks the process (copy-on-write semantics)</li>
+                        <li>The child process serializes all key-value pairs to a temporary file</li>
+                        <li>On completion, the file atomically replaces the old RDB file</li>
+                    </ol>
+                    <p><strong>Tradeoffs:</strong> Compact file, fast recovery, but you lose all writes since the last snapshot. Fork can cause latency spikes on large datasets due to memory page copying.</p>
+                </div>
+            </details>
+
+            <details id="aof">
+                <summary>Persistence: AOF (Append-Only File)</summary>
+                <div class="content">
+                    <p>AOF logs every write command in RESP format:</p>
+                    <ol>
+                        <li>Each write command is appended to an in-memory AOF buffer</li>
+                        <li>The buffer is flushed to disk based on the <code>fsync</code> policy:
+                            <ul>
+                                <li><code>always</code> — fsync after every command (safest, slowest)</li>
+                                <li><code>everysec</code> — fsync once per second (good compromise)</li>
+                                <li><code>no</code> — let the OS decide (fastest, least safe)</li>
+                            </ul>
+                        </li>
+                        <li>AOF rewrite (compaction) periodically rewrites the file using the current dataset state</li>
+                    </ol>
+                    <p><strong>Tradeoffs:</strong> Better durability (at most 1 second of data loss with <code>everysec</code>), but larger files and slower restart compared to RDB.</p>
+                </div>
+            </details>
+
+            <details id="pubsub">
+                <summary>Pub/Sub</summary>
+                <div class="content">
+                    <p>Redis Pub/Sub implements a fire-and-forget messaging system:</p>
+                    <ul>
+                        <li>Clients <code>SUBSCRIBE</code> to channels (or patterns with <code>PSUBSCRIBE</code>)</li>
+                        <li>Other clients <code>PUBLISH</code> messages to channels</li>
+                        <li>The server fans out messages to all subscribed connections</li>
+                        <li><strong>Messages are NOT persisted</strong> — if no subscriber is listening, the message is lost</li>
+                        <li>Subscribed connections enter a special mode where they can only execute subscribe/unsubscribe commands</li>
+                    </ul>
+                </div>
+            </details>
+
+            <details id="pipelining">
+                <summary>Pipelining</summary>
+                <div class="content">
+                    <p>Clients can send multiple commands without waiting for individual responses:</p>
+                    <ol>
+                        <li>Client writes N commands in a single TCP write</li>
+                        <li>Server processes all N commands sequentially</li>
+                        <li>Server writes all N responses back</li>
+                        <li>Client reads all N responses</li>
+                    </ol>
+                    <p>This eliminates the round-trip latency between each command, dramatically improving throughput for batch operations (from ~100K ops/sec to 500K+ ops/sec on typical hardware).</p>
+                </div>
+            </details>
+
+            <h2 id="resources">Resources</h2>
+
+            <details open>
+                <summary>Official Documentation</summary>
+                <div class="content">
+                    <ul>
+                        <li><a href="https://redis.io/docs/latest/">Redis Documentation</a> — Comprehensive official docs covering commands, data types, and operations</li>
+                        <li><a href="https://redis.io/docs/latest/develop/reference/protocol-spec/">RESP Protocol Specification</a> — Complete wire protocol specification</li>
+                        <li><a href="https://redis.io/docs/latest/operate/oss_and_stack/management/persistence/">Redis Persistence</a> — Official guide on RDB and AOF persistence mechanisms</li>
+                    </ul>
+                </div>
+            </details>
+
+            <details open>
+                <summary>Articles</summary>
+                <div class="content">
+                    <ul>
+                        <li><a href="https://architecturenotes.co/p/redis">Redis Explained</a> — Architecture Notes deep dive covering topologies, persistence, and process forking (2022)</li>
+                        <li><a href="https://community.aws/content/2tfQijlXleV5iM6hDkSGkMJlpcd/the-engineering-wisdom-behind-redis-s-single-threaded-design">The Engineering Wisdom Behind Redis's Single-Threaded Design</a> — AWS Community article (2025)</li>
+                        <li><a href="https://skshmgpt.medium.com/redis-internals-understanding-it-by-rebuilding-it-e16d6dd102e2">Redis Internals: Understanding It by Rebuilding It</a> — Walk-through of rebuilding Redis from scratch (2025)</li>
+                    </ul>
+                </div>
+            </details>
+
+            <details open>
+                <summary>Source Code</summary>
+                <div class="content">
+                    <ul>
+                        <li><a href="https://github.com/redis/redis">redis/redis</a> — Official Redis source (C). Key files: <code>server.c</code>, <code>t_string.c</code>, <code>t_list.c</code>, <code>aof.c</code>, <code>rdb.c</code></li>
+                        <li><a href="https://github.com/antirez/RESP3/blob/master/spec.md">RESP3 Specification</a> — Antirez's RESP3 protocol spec with design rationale</li>
+                        <li><a href="https://github.com/redis/redis-specifications/blob/master/protocol/RESP2.md">RESP2 Specification</a> — Formal RESP2 protocol specification</li>
+                    </ul>
+                </div>
+            </details>
+        </main>
+    </div>
+
+    <script>
+        // Mermaid.js v10.9.0 - embedded for offline use
+        // Loading from CDN as fallback since embedding the full library (2MB+) would be impractical
+        // For true offline use, download mermaid.min.js and replace this script tag
+        (function() {
+            var script = document.createElement('script');
+            script.src = 'https://cdn.jsdelivr.net/npm/mermaid@10.9.0/dist/mermaid.min.js';
+            script.onload = function() {
+                mermaid.initialize({
+                    startOnLoad: true,
+                    theme: 'dark',
+                    themeVariables: {
+                        darkMode: true,
+                        background: '#1a1b26',
+                        primaryColor: '#3d59a1',
+                        primaryTextColor: '#c0caf5',
+                        primaryBorderColor: '#7aa2f7',
+                        lineColor: '#565f89',
+                        secondaryColor: '#24283b',
+                        tertiaryColor: '#1f2335',
+                        noteTextColor: '#c0caf5',
+                        noteBkgColor: '#24283b'
+                    }
+                });
+            };
+            script.onerror = function() {
+                // Fallback: show raw diagram text if mermaid fails to load
+                document.querySelectorAll('.mermaid').forEach(function(el) {
+                    el.style.textAlign = 'left';
+                    el.style.whiteSpace = 'pre';
+                    el.style.fontFamily = 'monospace';
+                    el.style.fontSize = '0.8rem';
+                });
+            };
+            document.head.appendChild(script);
+        })();
+    </script>
+</body>
+</html>
