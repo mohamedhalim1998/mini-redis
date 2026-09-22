@@ -1,4 +1,6 @@
-package com.mohamed.halim.miniredis;
+package com.mohamed.halim.miniredis.datastore;
+
+import com.mohamed.halim.miniredis.WrongTypeException;
 
 import java.util.List;
 import java.util.Map;
@@ -12,7 +14,13 @@ import java.util.Set;
  * the server handles multiple connections concurrently.
  */
 public interface DataStore {
+    class Holder {
+        private static final DataStore INSTANCE = new InMemoryDataStore();
+    }
 
+    static DataStore getInstance() {
+        return DataStore.Holder.INSTANCE;
+    }
     // --- Phase 1: String Operations ---
 
     /**

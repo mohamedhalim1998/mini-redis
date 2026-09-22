@@ -1,4 +1,4 @@
-package com.mohamed.halim.miniredis;
+package com.mohamed.halim.miniredis.datastore;
 
 /**
  * Represents a single entry in the data store, used for persistence serialization.

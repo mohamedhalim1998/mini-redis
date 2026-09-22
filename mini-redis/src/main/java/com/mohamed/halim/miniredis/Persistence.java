@@ -1,5 +1,8 @@
 package com.mohamed.halim.miniredis;
 
+import com.mohamed.halim.miniredis.command.CommandExecutor;
+import com.mohamed.halim.miniredis.datastore.DataStore;
+
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
