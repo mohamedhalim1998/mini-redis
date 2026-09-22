@@ -1,10 +1,8 @@
-package com.mohamed.halim.miniredis;
-
-import com.mohamed.halim.miniredis.resp.RespType;
+package com.mohamed.halim.miniredis.resp;
 
 import java.util.List;
 
-public class RespEncoderImpl implements RespEncoder{
+public class RespEncoderImpl implements RespEncoder {
     public static final String END_LINE = "\r\n";
     @Override
     public byte[] encodeSimpleString(String value) {
@@ -32,7 +30,7 @@ public class RespEncoderImpl implements RespEncoder{
 
     @Override
     public byte[] encodeBulkString(String value) {
-        if(value == null) {
+        if (value == null) {
             return "$-1\r\n".getBytes();
         }
         String builder = encodeString(value);
@@ -49,15 +47,15 @@ public class RespEncoderImpl implements RespEncoder{
 
     @Override
     public byte[] encodeArray(List<String> elements) {
-        if(elements == null) {
+        if (elements == null) {
             return "*-1\r\n".getBytes();
         }
         StringBuilder builder = new StringBuilder();
         builder.append(RespType.ARRAY.getPrefix())
                 .append(elements.size())
                 .append(END_LINE);
-       elements.stream().map(this::encodeString).forEach(builder::append);
-       return builder.toString().getBytes();
+        elements.stream().map(this::encodeString).forEach(builder::append);
+        return builder.toString().getBytes();
     }
 
     @Override

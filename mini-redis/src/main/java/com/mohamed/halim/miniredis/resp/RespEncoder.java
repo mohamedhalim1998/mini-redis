@@ -1,4 +1,4 @@
-package com.mohamed.halim.miniredis;
+package com.mohamed.halim.miniredis.resp;
 
 import java.util.List;
 
@@ -9,7 +9,13 @@ import java.util.List;
  * Redis clients can understand.
  */
 public interface RespEncoder {
+    class Holder {
+        private static final RespEncoder INSTANCE = new RespEncoderImpl();
+    }
 
+    static RespEncoder getInstance() {
+        return Holder.INSTANCE;
+    }
     // --- Phase 1: Core Encoding ---
 
     /**

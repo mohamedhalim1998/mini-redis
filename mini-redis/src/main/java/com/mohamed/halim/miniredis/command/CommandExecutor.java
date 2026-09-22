@@ -1,4 +1,4 @@
-package com.mohamed.halim.miniredis;
+package com.mohamed.halim.miniredis.command;
 
 import java.util.List;
 

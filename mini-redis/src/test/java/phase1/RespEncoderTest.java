@@ -1,13 +1,13 @@
 package phase1;
 
-import com.mohamed.halim.miniredis.*;
+import com.mohamed.halim.miniredis.resp.RespEncoder;
+import com.mohamed.halim.miniredis.resp.RespEncoderImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.*;
