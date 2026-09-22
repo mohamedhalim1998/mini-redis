@@ -1,4 +1,4 @@
-package com.mohamed.halim.miniredis;
+package com.mohamed.halim.miniredis.resp;
 
 /**
  * Thrown when the RESP parser encounters malformed input.

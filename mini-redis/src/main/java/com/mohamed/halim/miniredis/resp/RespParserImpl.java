@@ -1,8 +1,4 @@
-package com.mohamed.halim.miniredis;
-
-import com.mohamed.halim.miniredis.resp.*;
-import com.mohamed.halim.miniredis.resp.Error;
-import com.mohamed.halim.miniredis.resp.Integer;
+package com.mohamed.halim.miniredis.resp;
 
 import java.io.IOException;
 import java.io.InputStream;
