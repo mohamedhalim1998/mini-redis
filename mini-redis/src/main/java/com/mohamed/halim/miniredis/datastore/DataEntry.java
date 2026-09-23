@@ -8,5 +8,29 @@ package com.mohamed.halim.miniredis.datastore;
  * @param value     the raw value (type-specific)
  * @param expiresAt absolute expiration timestamp in ms, or -1 if no expiry
  */
-public record DataEntry(String key, String type, Object value, long expiresAt) {
+public record DataEntry(String key, DataType type, Object value, long expiresAt) {
+    public static DataEntry empty() {
+        return new DataEntry("", DataType.NULL, null, -1);
+    }
+
+    public String getSimpleValue() {
+        if(type == DataType.SIMPLE && value != null) {
+            return value.toString();
+        }
+        return null;
+    }
+
+    public enum DataType {
+        SIMPLE,
+        LIST,
+        HASH,
+        NULL
+    }
+
+    public static DataEntry fromSimpleValue(String key, String value) {
+        return new DataEntry(key,DataType.SIMPLE , value, -1);
+    }
+    public static DataEntry fromSimpleValue(String key, String value, long ttl) {
+        return new DataEntry(key,DataType.SIMPLE , value, ttl);
+    }
 }

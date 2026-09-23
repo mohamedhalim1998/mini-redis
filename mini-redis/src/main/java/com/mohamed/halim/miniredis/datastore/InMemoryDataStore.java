@@ -9,16 +9,16 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class InMemoryDataStore implements DataStore {
-    private final Map<String, String> store = new ConcurrentHashMap<>();
+    private final Map<String, DataEntry> store = new ConcurrentHashMap<>();
 
     @Override
     public synchronized void set(String key, String value) {
-        store.put(key, value);
+        store.put(key, DataEntry.fromSimpleValue(key, value));
     }
 
     @Override
     public synchronized String get(String key) {
-        return store.get(key);
+        return store.getOrDefault(key, DataEntry.empty()).getSimpleValue();
     }
 
     @Override
@@ -33,7 +33,7 @@ public class InMemoryDataStore implements DataStore {
 
     @Override
     public synchronized long incr(String key) {
-        var value = store.get(key);
+        var value = store.getOrDefault(key, DataEntry.empty()).getSimpleValue();
         if(value == null) {
            value = "0";
         }
@@ -45,7 +45,7 @@ public class InMemoryDataStore implements DataStore {
 
     @Override
     public synchronized long decr(String key) {
-        var value = store.get(key);
+        var value = store.getOrDefault(key, DataEntry.empty()).getSimpleValue();
         if(value == null) {
             value = "0";
         }
@@ -57,7 +57,7 @@ public class InMemoryDataStore implements DataStore {
 
     @Override
     public synchronized void setWithTtl(String key, String value, long ttlMs) {
-
+        store.put(key, DataEntry.fromSimpleValue(key, value, ttlMs));
     }
 
     @Override
