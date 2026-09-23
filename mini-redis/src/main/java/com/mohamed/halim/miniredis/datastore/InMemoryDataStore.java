@@ -18,7 +18,12 @@ public class InMemoryDataStore implements DataStore {
 
     @Override
     public synchronized String get(String key) {
-        return store.getOrDefault(key, DataEntry.empty()).getSimpleValue();
+        var value = store.getOrDefault(key, DataEntry.empty());
+        if(value.isExpired()) {
+            del(key);
+            return null;
+        }
+        return value.getSimpleValue();
     }
 
     @Override
