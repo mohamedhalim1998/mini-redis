@@ -191,7 +191,7 @@ public class InMemoryDataStore implements DataStore {
 
     @Override
     public Iterable<DataEntry> entries() {
-        return null;
+        return store.values();
     }
 
     @Override
