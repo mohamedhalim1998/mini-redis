@@ -11,4 +11,5 @@ public enum CommandType {
     PEXPIRE,
     TTL,
     PTTL,
+    PERSIST,
 }
