@@ -1,7 +1,5 @@
 package com.mohamed.halim.miniredis.datastore;
 
-import com.mohamed.halim.miniredis.WrongTypeException;
-
 import java.util.List;
 import java.util.Map;
 import java.util.Set;

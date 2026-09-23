@@ -8,6 +8,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public class InMemoryDataStore implements DataStore {
     private final Map<String, DataEntry> store = new ConcurrentHashMap<>();
@@ -109,98 +111,231 @@ public class InMemoryDataStore implements DataStore {
     }
 
     @Override
-    public long lpush(String key, String... values) {
-        return 0;
+    public long rpush(String key, String... values) {
+        var value = store.get(key);
+
+        if(value != null && !DataEntry.DataType.LIST.equals(value.type())) {
+            throw new WrongTypeException();
+        }
+        if(value == null) {
+            value = DataEntry.initList(key, values);
+            store.put(key, value);
+        } else {
+            value.appendItems(values);
+        }
+        return value.getListSize();
     }
 
     @Override
-    public long rpush(String key, String... values) {
-        return 0;
+    public long lpush(String key, String... values) {
+        var value = store.get(key);
+
+        if(value != null && !DataEntry.DataType.LIST.equals(value.type())) {
+            throw new WrongTypeException();
+        }
+        if(value == null) {
+            value = DataEntry.initListReverse(key, values);
+            store.put(key, value);
+        } else {
+            value.appendItemsFirst(values);
+        }
+        return value.getListSize();
     }
 
     @Override
     public String lpop(String key) {
-        return "";
+        var value = store.get(key);
+        if(value == null) {
+            return null;
+        }
+        if(!DataEntry.DataType.LIST.equals(value.type())) {
+            throw new WrongTypeException();
+        }
+        return value.removeFirst();
     }
 
     @Override
     public String rpop(String key) {
-        return "";
+        var value = store.get(key);
+        if(value == null) {
+            return null;
+        }
+        if(!DataEntry.DataType.LIST.equals(value.type())) {
+            throw new WrongTypeException();
+        }
+        return value.removeLast();
     }
 
     @Override
     public long llen(String key) {
-        return 0;
+        var value = store.get(key);
+        if(value == null) {
+            return 0;
+        }
+        if(!DataEntry.DataType.LIST.equals(value.type())) {
+            throw new WrongTypeException();
+        }
+        return value.getListSize();
     }
 
     @Override
     public List<String> lrange(String key, long start, long stop) {
-        return List.of();
+        var value = store.get(key);
+        if(value == null) {
+            return List.of();
+        }
+        if(!DataEntry.DataType.LIST.equals(value.type())) {
+            throw new WrongTypeException();
+        }
+        var size = value.getListSize();
+        start = start < 0 ? start + size : start;
+        stop = stop < 0 ? stop + size : stop;
+        return value.getRange(start, stop);
     }
 
     @Override
     public long sadd(String key, String... members) {
-        return 0;
+        var value = store.get(key);
+        if(value != null && !DataEntry.DataType.SET.equals(value.type())) {
+            throw new WrongTypeException();
+        }
+        if(value == null) {
+            value = DataEntry.initSet(key, members);
+            store.put(key, value);
+            return value.getSetSize();
+        } else {
+            return value.addToSet(members);
+        }
     }
 
     @Override
     public long srem(String key, String... members) {
-        return 0;
+        var value = store.get(key);
+        if(value != null && !DataEntry.DataType.SET.equals(value.type())) {
+            throw new WrongTypeException();
+        }
+        if(value == null) {
+            return 0;
+        } else {
+            return value.removeFromSet(members);
+        }
     }
 
     @Override
     public boolean sismember(String key, String member) {
-        return false;
+        var value = store.get(key);
+        if(value != null && !DataEntry.DataType.SET.equals(value.type())) {
+            throw new WrongTypeException();
+        }
+        if(value == null) {
+            return false;
+        }
+        return value.isSetMember(member);
     }
 
     @Override
     public Set<String> smembers(String key) {
-        return Set.of();
+        var value = store.get(key);
+        if(value != null && !DataEntry.DataType.SET.equals(value.type())) {
+            throw new WrongTypeException();
+        }
+        if(value == null) {
+            return Set.of();
+        }
+        return value.getSetValue();
     }
 
     @Override
     public long scard(String key) {
-        return 0;
+        var value = store.get(key);
+        if(value != null && !DataEntry.DataType.SET.equals(value.type())) {
+            throw new WrongTypeException();
+        }
+        if(value == null) {
+            return 0;
+        }
+        return value.getSetSize();
     }
 
     @Override
     public boolean hset(String key, String field, String value) {
-        return false;
+        var keyValue = store.get(key);
+        if(keyValue != null && !DataEntry.DataType.HASH.equals(keyValue.type())) {
+            throw new WrongTypeException();
+        }
+        if(keyValue == null) {
+            keyValue = DataEntry.initHash(key, field, value);
+            store.put(key, keyValue);
+            return true;
+        } else {
+            return keyValue.addToHash(field, value);
+        }
     }
 
     @Override
     public String hget(String key, String field) {
-        return "";
+        var keyValue = store.get(key);
+        if(keyValue != null && !DataEntry.DataType.HASH.equals(keyValue.type())) {
+            throw new WrongTypeException();
+        }
+        if(keyValue == null) {
+            return null;
+        } else {
+            return keyValue.getFromHash(field);
+        }
     }
 
     @Override
     public long hdel(String key, String... fields) {
-        return 0;
+        var keyValue = store.get(key);
+        if(keyValue != null && !DataEntry.DataType.HASH.equals(keyValue.type())) {
+            throw new WrongTypeException();
+        }
+        if(keyValue == null) {
+            return 0;
+        } else {
+            return keyValue.removeFromHash(fields);
+        }
     }
 
     @Override
     public Map<String, String> hgetall(String key) {
-        return Map.of();
+        var keyValue = store.get(key);
+        if(keyValue != null && !DataEntry.DataType.HASH.equals(keyValue.type())) {
+            throw new WrongTypeException();
+        }
+        if(keyValue == null) {
+            return Map.of();
+        } else {
+            return keyValue.getMap();
+        }
     }
 
     @Override
     public boolean hexists(String key, String field) {
-        return false;
+        return hget(key, field) != null;
     }
 
     @Override
     public long hlen(String key) {
-        return 0;
+        return hgetall(key).size();
     }
 
     @Override
     public String type(String key) {
-        return "";
+        var value = store.get(key);
+        if(value == null) {
+            return null;
+        }
+        return value.type().name();
     }
 
     @Override
     public Set<String> keys(String pattern) {
-        return Set.of();
+        var regex = Pattern.compile(pattern.replace(".", "\\.")
+                .replace("*", ".*")
+                .replace("?", "."));
+        return store.keySet().stream().filter(key -> regex.matcher(key).matches()).collect(Collectors.toSet());
     }
 
     @Override
@@ -210,6 +345,6 @@ public class InMemoryDataStore implements DataStore {
 
     @Override
     public long size() {
-        return 0;
+        return store.size();
     }
 }

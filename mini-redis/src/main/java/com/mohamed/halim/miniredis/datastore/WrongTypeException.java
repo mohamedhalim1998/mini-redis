@@ -1,4 +1,4 @@
-package com.mohamed.halim.miniredis;
+package com.mohamed.halim.miniredis.datastore;
 
 /**
  * Thrown when a command is executed against a key holding the wrong data type.
