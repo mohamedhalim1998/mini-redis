@@ -31,6 +31,10 @@ public record DataEntry(String key, DataType type, Object value, long ttl, long 
         return remainTtl;
     }
 
+    public boolean isExpired() {
+        return ttl != -1 && System.currentTimeMillis() >= expiresAt;
+    }
+
     public enum DataType {
         SIMPLE,
         LIST,
