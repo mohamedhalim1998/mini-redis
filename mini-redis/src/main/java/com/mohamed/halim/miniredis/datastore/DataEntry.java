@@ -20,6 +20,17 @@ public record DataEntry(String key, DataType type, Object value, long ttl, long 
         return null;
     }
 
+    public long getRemainingTtl() {
+        if(ttl == -1) {
+            return -1;
+        }
+        var remainTtl = expiresAt - System.currentTimeMillis();
+        if(remainTtl < 0) {
+            return -2;
+        }
+        return remainTtl;
+    }
+
     public enum DataType {
         SIMPLE,
         LIST,
