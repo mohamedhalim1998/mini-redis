@@ -8,5 +8,7 @@ public enum CommandType {
     INCR,
     DECR,
     EXPIRE,
-    PEXPIRE
+    PEXPIRE,
+    TTL,
+    PTTL,
 }

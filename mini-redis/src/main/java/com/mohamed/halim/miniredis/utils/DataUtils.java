@@ -11,6 +11,5 @@ public class DataUtils {
         } catch (Exception e) {
             throw new RuntimeException("(error) value is not an integer or out of range");
         }
-
     }
 }

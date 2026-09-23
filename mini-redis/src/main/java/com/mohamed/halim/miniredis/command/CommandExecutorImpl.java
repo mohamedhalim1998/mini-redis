@@ -18,7 +18,9 @@ public class CommandExecutorImpl implements CommandExecutor {
                 Map.entry(CommandType.INCR, new IncrCommand()),
                 Map.entry(CommandType.DECR, new DecrCommand()),
                 Map.entry(CommandType.EXPIRE, new ExpireCommand()),
-                Map.entry(CommandType.PEXPIRE, new PexpireCommand())
+                Map.entry(CommandType.PEXPIRE, new PexpireCommand()),
+                Map.entry(CommandType.TTL, new TllCommand()),
+                Map.entry(CommandType.PTTL, new PtllCommand())
         );
     }
 

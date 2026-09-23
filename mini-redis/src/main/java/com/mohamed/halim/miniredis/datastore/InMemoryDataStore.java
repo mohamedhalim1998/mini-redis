@@ -77,7 +77,11 @@ public class InMemoryDataStore implements DataStore {
 
     @Override
     public long pttl(String key) {
-        return 0;
+        var value = store.get(key);
+        if(value == null) {
+            return -2;
+        }
+        return value.getRemainingTtl();
     }
 
     @Override
