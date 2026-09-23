@@ -6,5 +6,7 @@ public enum CommandType {
     SET,
     GET,
     INCR,
-    DECR
+    DECR,
+    EXPIRE,
+    PEXPIRE
 }

@@ -62,7 +62,12 @@ public class InMemoryDataStore implements DataStore {
 
     @Override
     public synchronized boolean expire(String key, long ttlMs) {
-        return false;
+        var value = store.get(key);
+        if(value == null) {
+            return false;
+        }
+        store.put(key, value.cloneWithNewTtl(ttlMs));
+        return true;
     }
 
     @Override
