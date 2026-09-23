@@ -3,6 +3,7 @@ package com.mohamed.halim.miniredis.command;
 import com.mohamed.halim.miniredis.resp.RespEncoder;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 public class CommandExecutorImpl implements CommandExecutor {
@@ -37,7 +38,7 @@ public class CommandExecutorImpl implements CommandExecutor {
 
     private static CommandType getType(String command) {
         try {
-            return CommandType.valueOf(command);
+            return CommandType.valueOf(command.toUpperCase(Locale.ROOT));
         } catch (IllegalArgumentException e) {
             return null;
         }
