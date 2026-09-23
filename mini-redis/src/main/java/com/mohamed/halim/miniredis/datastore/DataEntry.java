@@ -58,4 +58,13 @@ public record DataEntry(String key, DataType type, Object value, long ttl, long 
                 System.currentTimeMillis() + ttl
         );
     }
+    public DataEntry cloneWithoutTtl() {
+        return new DataEntry(
+                key,
+                type,
+                value,
+                -1,
+                -1
+        );
+    }
 }

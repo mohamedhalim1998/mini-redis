@@ -11,12 +11,7 @@ public class ActiveExpirationTask {
 
         Runnable task = () -> {
             var store = DataStore.getInstance();
-            var entries = store.entries();
-            entries.forEach(e -> {
-                if(e.isExpired()) {
-                    store.del(e.key());
-                }
-            });
+            store.expireActiveCycle();
         };
 
         scheduler.scheduleAtFixedRate(

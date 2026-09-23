@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class InMemoryDataStore implements DataStore {
     private final Map<String, DataEntry> store = new ConcurrentHashMap<>();
@@ -77,7 +78,12 @@ public class InMemoryDataStore implements DataStore {
 
     @Override
     public boolean persist(String key) {
-        return false;
+        var value = store.get(key);
+        if(value == null || value.ttl() == -1 || value.isExpired()) {
+            return false;
+        }
+        store.put(key, value.cloneWithoutTtl());
+        return true;
     }
 
     @Override
@@ -91,7 +97,15 @@ public class InMemoryDataStore implements DataStore {
 
     @Override
     public int expireActiveCycle() {
-        return 0;
+        var entries = store.values();
+        var count = new AtomicInteger(0);
+        entries.forEach(e -> {
+            if(e.isExpired()) {
+                store.remove(e.key());
+                count.incrementAndGet();
+            }
+        });
+        return count.intValue();
     }
 
     @Override
