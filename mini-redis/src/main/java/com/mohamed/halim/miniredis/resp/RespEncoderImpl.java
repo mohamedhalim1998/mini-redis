@@ -1,6 +1,6 @@
 package com.mohamed.halim.miniredis.resp;
 
-import java.util.List;
+import java.util.Collection;
 
 public class RespEncoderImpl implements RespEncoder {
     public static final String END_LINE = "\r\n";
@@ -46,7 +46,7 @@ public class RespEncoderImpl implements RespEncoder {
     }
 
     @Override
-    public byte[] encodeArray(List<String> elements) {
+    public byte[] encodeArray(Collection<String> elements) {
         if (elements == null) {
             return "*-1\r\n".getBytes();
         }

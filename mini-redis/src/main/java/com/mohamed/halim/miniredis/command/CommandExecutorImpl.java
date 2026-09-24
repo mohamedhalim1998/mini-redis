@@ -21,7 +21,26 @@ public class CommandExecutorImpl implements CommandExecutor {
                 Map.entry(CommandType.PEXPIRE, new PexpireCommand()),
                 Map.entry(CommandType.TTL, new TllCommand()),
                 Map.entry(CommandType.PTTL, new PtllCommand()),
-                Map.entry(CommandType.PERSIST, new PresistCommand())
+                Map.entry(CommandType.PERSIST, new PresistCommand()),
+                Map.entry(CommandType.LPUSH, new LpushCommand()),
+                Map.entry(CommandType.RPUSH, new RpushCommand()),
+                Map.entry(CommandType.LPOP, new LpopCommand()),
+                Map.entry(CommandType.RPOP, new RpopCommand()),
+                Map.entry(CommandType.LLEN, new LlenCommand()),
+                Map.entry(CommandType.LRANGE, new LrangeCommand()),
+                Map.entry(CommandType.SADD, new SaddCommand()),
+                Map.entry(CommandType.SREM, new SremCommand()),
+                Map.entry(CommandType.SISMEMBER, new SisMemberCommand()),
+                Map.entry(CommandType.SMEMBERS, new SmembersCommand()),
+                Map.entry(CommandType.SCARD, new ScardCommand()),
+                Map.entry(CommandType.HSET, new HsetCommand()),
+                Map.entry(CommandType.HGET, new HgetCommand()),
+                Map.entry(CommandType.HDEL, new HdelCommand()),
+                Map.entry(CommandType.HGETALL, new HgetAllCommand()),
+                Map.entry(CommandType.HEXISTS, new HexistsCommand()),
+                Map.entry(CommandType.HLEN, new HlenCommand()),
+                Map.entry(CommandType.TYPE, new TypeCommand()),
+                Map.entry(CommandType.KEYS, new KeysCommand())
         );
     }
 

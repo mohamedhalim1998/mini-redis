@@ -1,5 +1,7 @@
 package com.mohamed.halim.miniredis.resp;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -62,7 +64,7 @@ public interface RespEncoder {
      * @param elements list of bulk strings, or null for null array (*-1\r\n)
      * @return RESP-encoded bytes
      */
-    byte[] encodeArray(List<String> elements);
+    byte[] encodeArray(Collection<String> elements);
 
     // --- Phase 5: Pub/Sub Messages ---
 
