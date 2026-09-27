@@ -347,4 +347,29 @@ public class InMemoryDataStore implements DataStore {
     public long size() {
         return store.size();
     }
+
+    @Override
+    public void replaceEntries(Iterable<DataEntry> entries) {
+        store.clear();
+        entries.forEach(e -> store.put(e.key(), e));
+    }
+
+    @Override
+    public void clear() {
+        store.clear();
+    }
+
+    @Override
+    public boolean expireAt(String key, long expireAt) {
+        var value = store.get(key);
+        if(value == null) {
+            return false;
+        }
+        var ttl = expireAt - System.currentTimeMillis();
+        if(ttl < 0) {
+            return false;
+        }
+        store.put(key, value.cloneWithNewTtl(ttl));
+        return true;
+    }
 }

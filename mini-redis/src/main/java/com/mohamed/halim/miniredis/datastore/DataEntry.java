@@ -1,5 +1,8 @@
 package com.mohamed.halim.miniredis.datastore;
 
+import com.mohamed.halim.miniredis.utils.DataUtils;
+
+import java.io.Serializable;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -11,7 +14,7 @@ import java.util.stream.Collectors;
  * @param value     the raw value (type-specific)
  * @param expiresAt absolute expiration timestamp in ms, or -1 if no expiry
  */
-public record DataEntry(String key, DataType type, Object value, long ttl, long expiresAt) {
+public record DataEntry(String key, DataType type, Serializable value, long ttl, long expiresAt) implements Serializable {
 
     public String getSimpleValue() {
         if (type == DataType.SIMPLE && value != null) {
@@ -190,6 +193,71 @@ public record DataEntry(String key, DataType type, Object value, long ttl, long 
         return map;
     }
 
+    public List<String> convertToCommand() {
+        return switch (type) {
+            case SIMPLE -> convertSimpleToCommand();
+            case LIST -> convertListToCommand();
+            case HASH -> convertHashToCommand();
+            case SET -> convertSetToCommand();
+            case NULL -> List.of();
+        };
+    }
+
+    private List<String> convertSetToCommand() {
+        var commands = new ArrayList<String>();
+        commands.add("Sadd %s %s".formatted(key, String.join(" ", getSetValue())));
+        if (isExpirable()) {
+            commands.add("PEXPIREAT %s %d".formatted(key, expiresAt));
+        }
+        return commands;
+
+    }
+
+    private List<String> convertHashToCommand() {
+        var commands = new ArrayList<String>();
+        assert getMap() != null;
+        getMap().forEach((k, v) -> {
+            commands.add(
+                    "HSET %s %s %s".formatted(key, k, v)
+            );
+        });
+        if (isExpirable()) {
+            commands.add("PEXPIREAT %s %d".formatted(key, expiresAt));
+        }
+        return commands;
+    }
+
+    private List<String> convertSimpleToCommand() {
+        var commands = new ArrayList<String>();
+        commands.add("SET %s %s".formatted(key, getSimpleValue()));
+        if (isExpirable()) {
+            commands.add("PEXPIREAT %s %d".formatted(key, expiresAt));
+        }
+        return commands;
+    }
+
+    private List<String> convertListToCommand() {
+        var commands = new ArrayList<String>();
+        commands.add("LPUSH %s %s".formatted(key, String.join(" ", getListValue())));
+        if (isExpirable()) {
+            commands.add("PEXPIREAT %s %d".formatted(key, expiresAt));
+        }
+        return commands;
+    }
+
+    private boolean isExpirable() {
+        return ttl != -1;
+    }
+
+    private List<String> getListValue() {
+        if (type != DataType.LIST) {
+            return List.of();
+        }
+        @SuppressWarnings("unchecked")
+        LinkedList<String> list = (LinkedList<String>) value;
+        return list;
+    }
+
     public enum DataType {
         SIMPLE,
         LIST,
@@ -241,6 +309,7 @@ public record DataEntry(String key, DataType type, Object value, long ttl, long 
                 -1
         );
     }
+
     public static DataEntry initHash(String key, String field, String value) {
         var map = new HashMap<String, String>();
         map.put(field, value);

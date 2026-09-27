@@ -29,6 +29,6 @@ public enum CommandType {
     HGETALL, 
     HEXISTS, 
     HLEN, 
-    TYPE, 
-    KEYS
+    TYPE,
+    DEL, PEXPIREAT, KEYS
 }

@@ -10,14 +10,14 @@ By the end, you'll have a working server that any standard Redis client (redis-c
 
 ### Phase 1: RESP Protocol & Basic Commands (Difficulty: Beginner)
 
-- [ ] Implement RESP2 parser (decode: Simple String, Error, Integer, Bulk String, Array)
-- [ ] Implement RESP2 encoder (serialize responses back to RESP format)
-- [ ] Start a TCP server that accepts client connections on a configurable port
-- [ ] Implement single-threaded event loop (accept → read → execute → respond)
-- [ ] Implement `PING` / `ECHO` commands
-- [ ] Implement `SET key value` and `GET key` (strings only)
-- [ ] Implement `DEL key [key ...]` and `EXISTS key [key ...]`
-- [ ] Implement `INCR` / `DECR` (atomic integer operations on string values)
+- [x] Implement RESP2 parser (decode: Simple String, Error, Integer, Bulk String, Array)
+- [x] Implement RESP2 encoder (serialize responses back to RESP format)
+- [x] Start a TCP server that accepts client connections on a configurable port
+- [x] Implement single-threaded event loop (accept → read → execute → respond)
+- [x] Implement `PING` / `ECHO` commands
+- [x] Implement `SET key value` and `GET key` (strings only)
+- [x] Implement `DEL key [key ...]` and `EXISTS key [key ...]`
+- [x] Implement `INCR` / `DECR` (atomic integer operations on string values)
 
 **Goal**: A working TCP server that can parse RESP commands, store/retrieve string values, and respond correctly. `redis-cli` can connect and execute basic commands.
 
@@ -32,12 +32,12 @@ By the end, you'll have a working server that any standard Redis client (redis-c
 
 ### Phase 2: Expiration & TTL (Difficulty: Beginner)
 
-- [ ] Implement `SET key value EX seconds` and `SET key value PX milliseconds`
-- [ ] Implement `EXPIRE key seconds` / `PEXPIRE key milliseconds`
-- [ ] Implement `TTL key` / `PTTL key` (report remaining time-to-live)
-- [ ] Implement lazy expiration (check TTL on every key access)
-- [ ] Implement active expiration (background task that periodically samples and removes expired keys)
-- [ ] Implement `PERSIST key` (remove expiration)
+- [x] Implement `SET key value EX seconds` and `SET key value PX milliseconds`
+- [x] Implement `EXPIRE key seconds` / `PEXPIRE key milliseconds`
+- [x] Implement `TTL key` / `PTTL key` (report remaining time-to-live)
+- [x] Implement lazy expiration (check TTL on every key access)
+- [x] Implement active expiration (background task that periodically samples and removes expired keys)
+- [x] Implement `PERSIST key` (remove expiration)
 
 **Goal**: Keys can expire automatically. Both lazy (on-access) and active (periodic sweep) expiration strategies work correctly.
 
@@ -52,12 +52,12 @@ By the end, you'll have a working server that any standard Redis client (redis-c
 
 ### Phase 3: Data Structures (Difficulty: Intermediate)
 
-- [ ] Implement List commands: `LPUSH`, `RPUSH`, `LPOP`, `RPOP`, `LLEN`, `LRANGE`
-- [ ] Implement Set commands: `SADD`, `SREM`, `SISMEMBER`, `SMEMBERS`, `SCARD`
-- [ ] Implement Hash commands: `HSET`, `HGET`, `HDEL`, `HGETALL`, `HEXISTS`, `HLEN`
-- [ ] Implement type checking (return WRONGTYPE error when command targets wrong type)
-- [ ] Implement `TYPE key` command
-- [ ] Implement `KEYS pattern` (glob-style pattern matching)
+- [x] Implement List commands: `LPUSH`, `RPUSH`, `LPOP`, `RPOP`, `LLEN`, `LRANGE`
+- [x] Implement Set commands: `SADD`, `SREM`, `SISMEMBER`, `SMEMBERS`, `SCARD`
+- [x] Implement Hash commands: `HSET`, `HGET`, `HDEL`, `HGETALL`, `HEXISTS`, `HLEN`
+- [x] Implement type checking (return WRONGTYPE error when command targets wrong type)
+- [x] Implement `TYPE key` command
+- [x] Implement `KEYS pattern` (glob-style pattern matching)
 
 **Goal**: Support Redis's core collection types. Each data structure is stored as a distinct type in the key space, with proper type-checking and error messages.
 

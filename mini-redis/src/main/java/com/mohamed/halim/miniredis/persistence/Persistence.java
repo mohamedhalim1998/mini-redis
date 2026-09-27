@@ -1,4 +1,4 @@
-package com.mohamed.halim.miniredis;
+package com.mohamed.halim.miniredis.persistence;
 
 import com.mohamed.halim.miniredis.command.CommandExecutor;
 import com.mohamed.halim.miniredis.datastore.DataStore;

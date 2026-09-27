@@ -12,6 +12,7 @@ import java.util.Set;
  * the server handles multiple connections concurrently.
  */
 public interface DataStore {
+
     class Holder {
         private static final DataStore INSTANCE = new InMemoryDataStore();
     }
@@ -325,4 +326,26 @@ public interface DataStore {
      * @return the key count
      */
     long size();
+
+    /**
+     * Replace all active keys with the given entries used for RDB recovery
+     * @param entries to replace
+     */
+    void replaceEntries(Iterable<DataEntry> entries);
+
+    /**
+     * clear all store values
+     */
+    void clear();
+
+
+    /**
+     * Set the expiration on an existing key.
+     *
+     * @param key   the key
+     * @param expireAt unix time in milliseconds which key will expire
+     * @return true if the timeout was set, false if key doesn't exist
+     */
+    boolean expireAt(String key, long expireAt);
+
 }
