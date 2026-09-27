@@ -1,15 +1,18 @@
 package com.mohamed.halim.miniredis.command;
 
+import com.mohamed.halim.miniredis.persistence.Persistence;
 import com.mohamed.halim.miniredis.resp.RespEncoder;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
 public class CommandExecutorImpl implements CommandExecutor {
     private final Map<CommandType, Command> commandMap;
-
+    private final Persistence persistence;
     public CommandExecutorImpl() {
+        this.persistence = Persistence.getInstance();
         this.commandMap = Map.ofEntries(
                 Map.entry(CommandType.PING, new PingCommand()),
                 Map.entry(CommandType.ECHO, new EchoCommand()),
@@ -55,9 +58,17 @@ public class CommandExecutorImpl implements CommandExecutor {
             return RespEncoder.getInstance().encodeError("ERR", " unknown command '%s'".formatted(command.getFirst()));
         }
         try {
-            return commandMap.get(type).execute(command);
+            var result = commandMap.get(type).execute(command);
+            appendCommand(type, command);
+            return result;
         } catch (Exception e) {
             return RespEncoder.getInstance().encodeError("ERR", e.getMessage());
+        }
+    }
+
+    private void appendCommand(CommandType type, List<String> command) throws IOException {
+        if(type.isModifyingCommand()) {
+            persistence.appendToAof(command);
         }
     }
 

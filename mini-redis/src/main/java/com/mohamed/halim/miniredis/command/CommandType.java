@@ -1,5 +1,7 @@
 package com.mohamed.halim.miniredis.command;
 
+import java.util.Set;
+
 public enum CommandType {
     PING,
     ECHO,
@@ -30,5 +32,28 @@ public enum CommandType {
     HEXISTS, 
     HLEN, 
     TYPE,
-    DEL, PEXPIREAT, KEYS
+    DEL,
+    PEXPIREAT,
+    KEYS;
+    public static Set<CommandType> modifyingCommands = Set.of(
+            SET,
+            INCR,
+            DECR,
+            EXPIRE,
+            PEXPIRE,
+            PERSIST,
+            LPUSH,
+            RPUSH,
+            LPOP,
+            RPOP,
+            SADD,
+            SREM,
+            HSET,
+            HDEL,
+            DEL,
+            PEXPIREAT
+    );
+    public boolean isModifyingCommand() {
+        return modifyingCommands.contains(this);
+    }
 }

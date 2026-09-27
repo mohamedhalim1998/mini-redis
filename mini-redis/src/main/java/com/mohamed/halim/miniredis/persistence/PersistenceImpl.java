@@ -1,13 +1,19 @@
 package com.mohamed.halim.miniredis.persistence;
 
+import com.mohamed.halim.miniredis.command.Command;
 import com.mohamed.halim.miniredis.command.CommandExecutor;
+import com.mohamed.halim.miniredis.command.CommandType;
+import com.mohamed.halim.miniredis.command.SetCommand;
 import com.mohamed.halim.miniredis.datastore.DataEntry;
 import com.mohamed.halim.miniredis.datastore.DataStore;
+import com.mohamed.halim.miniredis.utils.DataUtils;
 
 import java.io.*;
 import java.nio.file.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
+import java.util.concurrent.TimeUnit;
 
 public class PersistenceImpl implements Persistence {
     private StringBuilder builder;
@@ -26,8 +32,44 @@ public class PersistenceImpl implements Persistence {
 
     @Override
     public void appendToAof(List<String> command) throws IOException {
-        builder.append(String.join(" ", command));
-        builder.append("\n");
+        var type = CommandType.valueOf(command.getFirst().toUpperCase(Locale.ROOT));
+        switch (type) {
+            case SET -> appendSetCommand(command);
+            case EXPIRE -> appendExpireCommand(command);
+            case PEXPIRE -> appendPexpireCommand(command);
+            default -> {
+                builder.append(String.join(" ", command));
+                builder.append("\n");
+            }
+        }
+
+    }
+
+    private void appendExpireCommand(List<String> command) {
+        builder.append("PEXPIREAT %s %d".formatted(command.get(1), DataUtils.unixMsFromTtl(command.get(2), TimeUnit.SECONDS)));
+
+    }
+
+    private void appendPexpireCommand(List<String> command) {
+        builder.append("PEXPIREAT %s %d".formatted(command.get(1), DataUtils.unixMsFromTtl(command.get(2), TimeUnit.MILLISECONDS)));
+    }
+
+    private void appendSetCommand(List<String> command) {
+        var params = DataUtils.buildParams(command);
+        if(params.containsKey(SetCommand.Param.PX.name())) {
+            builder.append(String.join(" ", command.subList(0, 3)));
+            builder.append("\n");
+            builder.append("PEXPIREAT %s %d".formatted(command.get(1), DataUtils.unixMsFromTtl(params.get(SetCommand.Param.PX.name()), TimeUnit.MILLISECONDS)));
+            builder.append("\n");
+        } else   if(params.containsKey(SetCommand.Param.EX.name())) {
+            builder.append(String.join(" ", command.subList(0, 3)));
+            builder.append("\n");
+            builder.append("PEXPIREAT %s %d".formatted(command.get(1), DataUtils.unixMsFromTtl(params.get(SetCommand.Param.PX.name()), TimeUnit.SECONDS)));
+            builder.append("\n");
+        } else {
+            builder.append(String.join(" ", command));
+            builder.append("\n");
+        }
     }
 
     @Override

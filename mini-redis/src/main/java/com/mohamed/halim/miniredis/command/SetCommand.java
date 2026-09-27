@@ -9,6 +9,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static com.mohamed.halim.miniredis.utils.DataUtils.buildParams;
+
 public class SetCommand implements Command {
     public enum Param {
         EX,
@@ -70,17 +72,6 @@ public class SetCommand implements Command {
         return -1;
     }
 
-    private Map<String, String> buildParams(List<String> command) {
-        // from 3 skipping command name, key and value
-        var iterator = new ArrayList<>(command.subList(3, command.size())).iterator();
-        var args = new HashMap<String, String>();
-        while (iterator.hasNext()) {
-            var param = SetCommand.Param.valueOf(iterator.next());
-            if(param.haveArgs()) {
-                args.put(param.name(), iterator.next());
-            }
-        }
-        return args;
-    }
+
 
 }

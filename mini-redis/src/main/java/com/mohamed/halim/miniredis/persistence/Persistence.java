@@ -2,6 +2,7 @@ package com.mohamed.halim.miniredis.persistence;
 
 import com.mohamed.halim.miniredis.command.CommandExecutor;
 import com.mohamed.halim.miniredis.datastore.DataStore;
+import com.mohamed.halim.miniredis.datastore.InMemoryDataStore;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -11,7 +12,13 @@ import java.util.List;
  * Handles data persistence to disk via AOF and RDB mechanisms.
  */
 public interface Persistence {
+    class Holder {
+        private static final Persistence INSTANCE = new PersistenceImpl();
+    }
 
+    static Persistence getInstance() {
+        return Persistence.Holder.INSTANCE;
+    }
     // --- Phase 4: AOF ---
 
     /**
