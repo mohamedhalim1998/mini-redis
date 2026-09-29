@@ -1,5 +1,8 @@
 package com.mohamed.halim.miniredis.command;
 
+import com.mohamed.halim.miniredis.pubsub.Subscription;
+import com.mohamed.halim.miniredis.server.ClientContext;
+
 import java.util.List;
 
 /**
@@ -34,4 +37,14 @@ public interface CommandExecutor {
      * @return RESP-encoded response bytes
      */
     byte[] execute(List<String> command);
+
+
+    /**
+     * Execute a parsed command and produce RESP response.
+     *
+     * @param command the command and arguments
+     * @param context the client context
+     * @return RESP-encoded response bytes
+     */
+    byte[] execute(List<String> command, ClientContext context);
 }

@@ -1,4 +1,7 @@
-package com.mohamed.halim.miniredis;
+package com.mohamed.halim.miniredis.pubsub;
+
+import com.mohamed.halim.miniredis.datastore.DataStore;
+import com.mohamed.halim.miniredis.datastore.InMemoryDataStore;
 
 import java.util.Set;
 import java.util.function.BiConsumer;
@@ -11,7 +14,13 @@ import java.util.function.BiConsumer;
  * exist, the message is simply discarded.
  */
 public interface PubSub {
+    class Holder {
+        private static final PubSub INSTANCE = new PubSubImpl();
+    }
 
+    static PubSub getInstance() {
+        return PubSub.Holder.INSTANCE;
+    }
     // --- Phase 5: Pub/Sub ---
 
     /**

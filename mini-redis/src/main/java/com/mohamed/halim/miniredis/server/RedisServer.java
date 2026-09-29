@@ -1,4 +1,4 @@
-package com.mohamed.halim.miniredis;
+package com.mohamed.halim.miniredis.server;
 
 /**
  * The main Redis server that listens for TCP connections and processes commands.
@@ -14,28 +14,12 @@ public interface RedisServer {
      * Start the server, binding to the specified port.
      * This method should be non-blocking — it starts the event loop
      * in the background and returns immediately.
-     *
-     * @param port the TCP port to listen on (default: 6379)
-     */
-    void start(int port);
+     **/
+    void start();
 
     /**
      * Stop the server gracefully, closing all client connections
      * and releasing resources.
      */
     void stop();
-
-    /**
-     * Check if the server is currently running and accepting connections.
-     *
-     * @return true if the server is running
-     */
-    boolean isRunning();
-
-    /**
-     * Get the port the server is listening on.
-     *
-     * @return the bound port, or -1 if not started
-     */
-    int getPort();
 }

@@ -2,6 +2,11 @@ package com.mohamed.halim.miniredis.server;
 
 import com.mohamed.halim.miniredis.command.CommandExecutor;
 import com.mohamed.halim.miniredis.command.CommandExecutorImpl;
+import com.mohamed.halim.miniredis.command.CommandType;
+import com.mohamed.halim.miniredis.pubsub.PubSub;
+import com.mohamed.halim.miniredis.pubsub.PubSubImpl;
+import com.mohamed.halim.miniredis.pubsub.Subscription;
+import com.mohamed.halim.miniredis.resp.RespEncoder;
 import com.mohamed.halim.miniredis.resp.RespParser;
 import com.mohamed.halim.miniredis.resp.RespParserImpl;
 
@@ -14,8 +19,10 @@ import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
+import java.util.UUID;
 
-public class EventLoop implements Runnable {
+public class EventLoop implements Runnable, RedisServer {
 
     private final Selector selector;
     private boolean running;
@@ -35,6 +42,12 @@ public class EventLoop implements Runnable {
         channel.register(selector, SelectionKey.OP_ACCEPT);
     }
 
+    @Override
+    public void start() {
+        run();
+    }
+
+    @Override
     public void stop() {
         this.running = false;
     }
@@ -110,9 +123,9 @@ public class EventLoop implements Runnable {
         buffer.flip();
         byte[] bytes = new byte[buffer.remaining()];
         buffer.get(bytes);
-        ctx.setInput(new String(bytes, StandardCharsets.UTF_8));
         var command = parser.parseCommand(new ByteArrayInputStream(bytes));
-        ctx.output().write(commandExecutor.execute(command));
+        ctx.setKey(key);
+        ctx.output().write(commandExecutor.execute(command, ctx));
         key.interestOps(SelectionKey.OP_WRITE | SelectionKey.OP_READ);
     }
 
@@ -122,7 +135,7 @@ public class EventLoop implements Runnable {
         var client = server.accept();
         if (client != null) {
             client.configureBlocking(false);
-            client.register(key.selector(), SelectionKey.OP_READ, new ClientContext());
+            client.register(key.selector(), SelectionKey.OP_READ, new ClientContext(UUID.randomUUID().toString()));
             System.out.println("Open connection with: " + client.getRemoteAddress());
         }
     }

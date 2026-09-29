@@ -13,28 +13,34 @@ public enum CommandType {
     PEXPIRE,
     TTL,
     PTTL,
-    PERSIST, 
-    LPUSH, 
-    RPUSH, 
-    LPOP,  
-    RPOP, 
-    LLEN, 
-    LRANGE, 
-    SADD, 
-    SREM, 
-    SISMEMBER, 
-    SMEMBERS, 
-    SCARD, 
-    HSET, 
-    HGET, 
-    HDEL, 
-    HGETALL, 
-    HEXISTS, 
-    HLEN, 
+    PERSIST,
+    LPUSH,
+    RPUSH,
+    LPOP,
+    RPOP,
+    LLEN,
+    LRANGE,
+    SADD,
+    SREM,
+    SISMEMBER,
+    SMEMBERS,
+    SCARD,
+    HSET,
+    HGET,
+    HDEL,
+    HGETALL,
+    HEXISTS,
+    HLEN,
     TYPE,
     DEL,
     PEXPIREAT,
-    KEYS;
+    KEYS,
+    SUBSCRIBE,
+    UNSUBSCRIBE,
+    PUBLISH,
+    DISCARD,
+    EXEC,
+    MULTI;
     public static Set<CommandType> modifyingCommands = Set.of(
             SET,
             INCR,
@@ -53,7 +59,22 @@ public enum CommandType {
             DEL,
             PEXPIREAT
     );
+
+    public static Set<CommandType> pubSubCommands = Set.of(
+            SUBSCRIBE,
+            UNSUBSCRIBE,
+            PUBLISH
+    );
+
     public boolean isModifyingCommand() {
         return modifyingCommands.contains(this);
+    }
+
+    public boolean isPubSub() {
+        return pubSubCommands.contains(this);
+    }
+
+    public boolean isTransactionCommand() {
+        return MULTI.equals(this);
     }
 }

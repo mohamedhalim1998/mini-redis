@@ -1,6 +1,7 @@
 package com.mohamed.halim.miniredis.resp;
 
 import java.util.Collection;
+import java.util.List;
 
 public class RespEncoderImpl implements RespEncoder {
     public static final String END_LINE = "\r\n";
@@ -60,6 +61,8 @@ public class RespEncoderImpl implements RespEncoder {
 
     @Override
     public byte[] encodePubSubMessage(String channel, String message) {
-        return new byte[0];
+        return encodeArray(List.of(
+                "message", channel, message
+        ));
     }
 }
